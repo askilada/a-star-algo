@@ -1,4 +1,3 @@
-
 function AStar(start, end, dist) {
     this.openSet = [start]
     this.closedSet = []
@@ -9,8 +8,21 @@ function AStar(start, end, dist) {
     this.end = end
 
 
-    this.heuristic_cost_of = function(a,b) {
-        return dist(b.x , b.y, a.x, a.y)
+    this.heuristic_cost_of = function(a, b) {
+        return dist(a.x, a.y, b.x, b.y)
+    }
+
+    this.backTrace = function(current) {
+        var finalPath = [current]
+        var keys = Object.keys(this.cameFrom)
+        while (Object.keys(this.cameFrom).includes(current.toString())) {
+            console.log("Something to backTrace");
+            current.used = true
+            current = this.cameFrom[current]
+            finalPath.push(current)
+
+        }
+        return finalPath
     }
 
 
@@ -23,7 +35,7 @@ function AStar(start, end, dist) {
     }
 
     this.doNext = function(doneCB) {
-        this.openSet.sort(function(a,b) {
+        this.openSet.sort(function(a, b) {
             if (this.fScore[a] < this.fScore[b]) {
                 return -1
             } else if (this.fScore[a] > this.fScore[b]) {
@@ -39,7 +51,7 @@ function AStar(start, end, dist) {
         if (this.current == this.end) {
             // You are now done
             console.log("DONE");
-            
+            this.backTrace(this.current)
             doneCB()
             return
         }
@@ -50,7 +62,7 @@ function AStar(start, end, dist) {
 
         for (var i = 0; i < this.current.neighbors.length; i++) {
             // Go to next we have been here
-            if(this.closedSet.includes(this.current.neighbors[i])) {
+            if (this.closedSet.includes(this.current.neighbors[i])) {
                 this.current.done = true
                 this.current.current = false
                 continue
@@ -58,7 +70,7 @@ function AStar(start, end, dist) {
 
             // Cacl the score if the current length
             var tGScore = this.gScore[this.current] + 1 // dist_between(current, current.neighbors[i])
-            if(this.openSet.includes(this.current.neighbors[i]) === false) {
+            if (this.openSet.includes(this.current.neighbors[i]) === false) {
                 this.openSet.push(this.current.neighbors[i])
             } else if (tGScore > this.gScore[this.current.neighbors[i]]) {
                 this.current.done = true
@@ -71,7 +83,9 @@ function AStar(start, end, dist) {
             this.current.current = false
             this.cameFrom[this.current.neighbors[i]] = this.current
             this.gScore[this.current.neighbors[i]] = tGScore
-            this.fScore[this.current.neighbors[i]] = this.gScore[this.current.neighbors[i]] + this.heuristic_cost_of(this.current.neighbors[i], this.end)
+            this.fScore[this.current.neighbors[i]] = this.gScore[this.current
+                .neighbors[i]] + this.heuristic_cost_of(this.current.neighbors[
+                i], this.end)
         }
 
     }
