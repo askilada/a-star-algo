@@ -1,5 +1,7 @@
 function heuristic_cost_of(elm, end) {
-    return Math.abs(end.x - elm.x) + Math.abs(end.y - elm.y)
+    var a = Math.abs(end.x - elm.x) + Math.abs(end.y - elm.y)
+        // var b = a * .2 + a
+    return a
 }
 
 var PlaceColor = {
@@ -36,44 +38,6 @@ function Place(x, y) {
         switch (where) {
             case NeighborPosition.Top:
                 return this.neighbors.filter(function(ne) {
-                    return this.y - 1 == ne.y && this.x == ne.x
-                }.bind(this))[0]
-            case NeighborPosition.TopRight:
-                return this.neighbors.filter(function(ne) {
-                    return this.y - 1 == ne.y && this.x + 1 == ne.x
-                }.bind(this))[0]
-            case NeighborPosition.Right:
-                return this.neighbors.filter(function(ne) {
-                    return this.y == ne.y && this.x + 1 == ne.x
-                }.bind(this))[0]
-            case NeighborPosition.BottomRight:
-                return this.neighbors.filter(function(ne) {
-                    return this.y + 1 == ne.y && this.x + 1 == ne.x
-                }.bind(this))[0]
-            case NeighborPosition.Bottom:
-                return this.neighbors.filter(function(ne) {
-                    return this.y + 1 == ne.y && this.x == ne.x
-                }.bind(this))[0]
-            case NeighborPosition.BottomLeft:
-                return this.neighbors.filter(function(ne) {
-                    return this.y + 1 == ne.y && this.x - 1 == ne.x
-                }.bind(this))[0]
-            case NeighborPosition.Left:
-                return this.neighbors.filter(function(ne) {
-                    return this.y == ne.y && this.x - 1 == ne.x
-                }.bind(this))[0]
-            case NeighborPosition.TopLeft:
-                return this.neighbors.filter(function(ne) {
-                    return this.y - 1 == ne.y && this.x - 1 == ne.x
-                }.bind(this))[0]
-            default:
-
-        }
-    }
-    this.getTrueNeighbor = function(where) {
-        switch (where) {
-            case NeighborPosition.Top:
-                return pathMapping.filter(function(ne) {
                     return this.y - 1 == ne.y && this.x == ne.x
                 }.bind(this))[0]
             case NeighborPosition.TopRight:
@@ -163,112 +127,122 @@ function Place(x, y) {
 }
 
 
-var pathMapping = new Array(50)
-for (var i = 0; i < pathMapping.length; i++) {
-    pathMapping[i] = new Array(50)
-    for (var j = 0; j < pathMapping[i].length; j++) {
-        pathMapping[i][j] = new Place(i, j)
-    }
+function Board(bw, bh) {
+    this.width = bw
+    this.height = bh
+
+    this.board = []
+    this.makeBoard = this.makeBoard.bind(this)
+    this.fillNeighbours = this.fillNeighbours.bind(this)
+
+    this.makeBoard()
+    this.fillNeighbours()
+
+
 }
 
-for (var i = 0; i < pathMapping.length; i++) {
-    for (var j = 0; j < pathMapping[i].length; j++) {
-        // Determen wall
-        if (i === 0 && j === 0) {
-            console.log('first');
-            pathMapping[i][j].wall = false
-        } else if (i === pathMapping.length - 1 && j === pathMapping[i].length -
-            1) {
-            pathMapping[i][j].wall = false
-        } else {
-            pathMapping[i][j].wall = (Math.random(1) < .2)
+Board.prototype.getPos = function(x, y) {
+    try {
+        var elm = this.board[x][y]
+        if (typeof elm == "undefined") {
+            return null
+        }
+        return elm;
+    } catch (e) {
+        return null
+    }
+};
+
+Board.prototype.getNeighbor = function(pos, elm) {
+    switch (pos) {
+        case NeighborPosition.TopLeft:
+            return this.getPos(elm.x - 1, elm.y - 1)
+        case NeighborPosition.Top:
+            return this.getPos(elm.x, elm.y - 1)
+        case NeighborPosition.TopRight:
+            return this.getPos(elm.x + 1, elm.y - 1)
+        case NeighborPosition.Right:
+            return this.getPos(elm.x + 1, elm.y)
+        case NeighborPosition.BottomRight:
+            return this.getPos(elm.x + 1, elm.y + 1)
+        case NeighborPosition.Bottom:
+            return this.getPos(elm.x, elm.y + 1)
+        case NeighborPosition.BottomLeft:
+            return this.getPos(elm.x - 1, elm.y + 1)
+        case NeighborPosition.Left:
+            return this.getPos(elm.x - 1, elm.y)
+        default:
+            return null
+
+    }
+};
+
+
+Board.prototype.makeBoard = function() {
+    var rows = new Array(this.width)
+    for (var i = 0; i < rows.length; i++) {
+        rows[i] = new Array(this.height)
+        for (var j = 0; j < rows[i].length; j++) {
+            rows[i][j] = new Place(i, j)
+            if ((i === 0 && j === 0)) { // TODO: Add the last field
+                rows[i][j].wall = false
+            } else {
+                rows[i][j].wall = (Math.random(1) < .2)
+            }
         }
     }
+    this.board = rows
+};
+
+Board.prototype.fillNeighbours = function() {
+    this.board.forEach(function(row) {
+
+        row.forEach(function(cell) {
+            var top = this.getNeighbor(NeighborPosition.Top,
+                cell)
+            var topRight = this.getNeighbor(
+                NeighborPosition.TopRight, cell)
+            var topLeft = this.getNeighbor(NeighborPosition
+                .TopLeft, cell)
+            var right = this.getNeighbor(NeighborPosition.Right,
+                cell)
+
+            var bottom = this.getNeighbor(NeighborPosition.Bottom,
+                cell)
+            var bottomRight = this.getNeighbor(
+                NeighborPosition.BottomRight, cell)
+            var bottomLeft = this.getNeighbor(
+                NeighborPosition.BottomLeft, cell)
+            var left = this.getNeighbor(NeighborPosition.Left,
+                cell)
+
+            var sides = [top, topRight, topLeft, right,
+                bottom, bottomRight, bottomLeft, left
+            ]
+            sides.forEach(function(side) {
+                if (side != null)
+                    cell.addNeighbor(side)
+            })
+
+        }.bind(this))
+
+
+    }.bind(this))
 }
 
 
-for (var i = 0; i < pathMapping.length; i++) {
-    for (var j = 0; j < pathMapping[i].length; j++) {
-        // Setting neighbors
-        // Top
-        if (j - 1 >= 0) {
-            pathMapping[i][j].addNeighbor(pathMapping[i][j - 1])
-        }
-
-        // Top right
-        if (
-            j - 1 >= 0 && i + 1 < pathMapping.length &&
-            (
-                pathMapping[i + 1][j].wall == false && pathMapping[i][j - 1].wall ==
-                false
-            )
-        ) {
-            pathMapping[i][j].addNeighbor(pathMapping[i + 1][j - 1])
-        }
-
-        // Top left
-        if (
-            j - 1 >= 0 && i - 1 >= 0 &&
-            (
-                pathMapping[i - 1][j].wall == false && pathMapping[i][j - 1].wall ==
-                false
-            )
-        ) {
-            pathMapping[i][j].addNeighbor(pathMapping[i - 1][j - 1])
-        }
-
-        // Right
-        if (i + 1 < pathMapping.length) {
-            pathMapping[i][j].addNeighbor(pathMapping[i + 1][j])
-        }
-        // Bottom
-        if (j + 1 < pathMapping[i].length) {
-            pathMapping[i][j].addNeighbor(pathMapping[i][j + 1])
-        }
-
-        // Bottom left
-        if (
-            j + 1 < pathMapping[i].length && i - 1 >= 0 &&
-            (
-                pathMapping[i][j + 1].wall == false && pathMapping[i - 1][j].wall ==
-                false
-            )
-        ) {
-            pathMapping[i][j].addNeighbor(pathMapping[i - 1][j + 1])
-        }
-
-        // Bottom right
-        if (
-            j + 1 < pathMapping[i].length && i + 1 < pathMapping.length &&
-            (
-                pathMapping[i][j + 1].wall == false && pathMapping[i + 1][j].wall ==
-                false
-            )
-        ) {
-            pathMapping[i][j].addNeighbor(pathMapping[i + 1][j + 1])
-        }
-
-
-
-        // Left
-        if (i - 1 >= 0) {
-            pathMapping[i][j].addNeighbor(pathMapping[i - 1][j])
-        }
-    }
-}
-
-console.log(pathMapping);
+var board = new Board(50, 50)
+var start = board.board[0][0]
+var end = board.board[49][49]
 
 var aStar
+
 
 function setup() {
     createCanvas(750, 750);
     background(0)
     frameRate(120)
-
-    var firstPlace = pathMapping[0][0]
-        //aStar = new AStar(firstPlace, pathMapping[24][24], dist)
-    aStar = new AStar(firstPlace, pathMapping[49][22], dist)
+    aStar = new AStar(start, end, dist)
 
 
 }
@@ -281,11 +255,11 @@ function draw() {
             noLoop();
         });
     }
-
-
-    for (var i = 0; i < pathMapping.length; i++) {
-        for (var j = 0; j < pathMapping[i].length; j++) {
-            pathMapping[i][j].draw()
+    //
+    //
+    for (var i = 0; i < board.board.length; i++) {
+        for (var j = 0; j < board.board[i].length; j++) {
+            board.board[i][j].draw()
 
         }
     }

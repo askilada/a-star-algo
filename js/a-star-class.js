@@ -27,7 +27,7 @@ function AStar(start, end, dist) {
 
 
     this.gScore[start] = 0
-    this.fScore[start] = this.heuristic_cost_of(start, end)
+    this.fScore[start] = this.heuristic_cost_of(start, end) - 0.02
 
 
     this.hasNext = function() {
